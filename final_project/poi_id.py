@@ -10,7 +10,7 @@ from sklearn import preprocessing
 
 import matplotlib.pyplot as pl
 from sklearn.feature_selection import SelectKBest
-from class_vis import prettyPicture
+from pretty_picture import prettyPicture
 from sklearn.grid_search import GridSearchCV
 import math
 
@@ -50,7 +50,8 @@ def computeFraction( poi_messages, all_messages ):
 #features_list = ['poi','exercised_stock_options','salary']
 #features_list = ['poi','bonus','exercised_stock_options']
 #features_list = ['poi','salary', 'deferral_payments', 'loan_advances', 'bonus', 'restricted_stock_deferred', 'deferred_income', 'expenses', 'exercised_stock_options', 'other', 'long_term_incentive', 'restricted_stock', 'director_fees']
-features_list = ['poi', 'total_payments', 'total_stock_value', 'fraction_from_poi', 'fraction_to_poi']
+#features_list = ['poi', 'total_payments', 'total_stock_value', 'fraction_from_poi', 'fraction_to_poi']
+features_list = ['poi', 'salary','bonus']
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
@@ -72,11 +73,17 @@ print(data_dict['ALLEN PHILLIP K'])
 ### Store to my_dataset for easy export below.
 my_dataset = data_dict
 my_dataset.pop('TOTAL')
+error_total_stock_count = 0
 for name in my_dataset:
     person_data = my_dataset[name]
+    if person_data['total_stock_value'] < 0:
+        error_total_stock_count += 1
+        person_data['total_stock_value'] = 0.0
     person_data['fraction_from_poi'] = computeFraction(person_data['from_poi_to_this_person'], person_data['to_messages'])
     person_data['fraction_to_poi'] = computeFraction(person_data['from_this_person_to_poi'], person_data['from_messages'])
-print(my_dataset['ALLEN PHILLIP K'])
+print(my_dataset['BELFER ROBERT'])
+print(my_dataset['CARTER REBECCA C'])
+print(error_total_stock_count)
     
 
 ### Extract features and labels from dataset for local testing
@@ -121,8 +128,9 @@ scaled_features = scaler.fit_transform(features)
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import f1_score, make_scorer
 #parameters = {'max_depth':[2,5,10], 'min_samples_split':[2,3,4,5]}
-parameters = {'min_samples_split':[2,3,4,5,25]}
-decisionTree = DecisionTreeClassifier(criterion='entropy')
+parameters = {'min_samples_split':[2,3,4,5,25,30], 'criterion':['entropy']}
+#decisionTree = DecisionTreeClassifier(criterion='entropy')
+decisionTree = DecisionTreeClassifier()
 f1_scorer = make_scorer(f1_score)
 clf = GridSearchCV(decisionTree, parameters, scoring=f1_scorer)
 #clf = GridSearchCV(decisionTree, parameters)
@@ -140,10 +148,11 @@ clf = GridSearchCV(decisionTree, parameters, scoring=f1_scorer)
 # Example starting point. Try investigating other evaluation techniques!
 from sklearn.cross_validation import train_test_split
 features_train, features_test, labels_train, labels_test = \
-    train_test_split(features, labels, test_size=0.1, random_state=42)
+    train_test_split(features, labels, test_size=0.3, random_state=42)
 
-#clf.fit(features_train, labels_train)
-#prettyPicture(clf, features_test, labels_test)
+clf.fit(features_train, labels_train)
+print(features_train)
+prettyPicture(clf, features, labels, features_list)
 #print(clf.best_params_)
 
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
