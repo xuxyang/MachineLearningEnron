@@ -1,0 +1,30 @@
+linear kernel:
+
+no. of Chris training emails: 7936
+no. of Sara training emails: 7884
+training time: 162.465 s
+predicting time: 16.961 s
+0.984072810011
+
+no. of Chris training emails: 79
+no. of Sara training emails: 78
+training time: 0.102 s
+predicting time: 1.024 s
+0.884527872582
+
+rbf kernel:
+
+no. of Chris training emails: 79
+no. of Sara training emails: 78
+training time: 0.105 s
+predicting time: 1.138 s
+0.616040955631
+
+
+rbf kernel with C=10000
+
+no. of Chris training emails: 7936
+no. of Sara training emails: 7884
+training time: 107.058 s
+predicting time: 10.85 s
+0.990898748578
