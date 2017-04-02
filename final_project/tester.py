@@ -15,7 +15,7 @@ import sys
 from sklearn.cross_validation import StratifiedShuffleSplit
 sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
-from class_vis import prettyPicture
+#from class_vis import prettyPicture
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
 

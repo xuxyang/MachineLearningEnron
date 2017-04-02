@@ -46,12 +46,8 @@ def computeFraction( poi_messages, all_messages ):
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
-#features_list = ['poi','salary','bonus','total_payments','total_stock_value','long_term_incentive','from_this_person_to_poi','from_poi_to_this_person'] # You will need to use more features
-#features_list = ['poi','exercised_stock_options','salary']
-#features_list = ['poi','bonus','exercised_stock_options']
-#features_list = ['poi','salary', 'deferral_payments', 'loan_advances', 'bonus', 'restricted_stock_deferred', 'deferred_income', 'expenses', 'exercised_stock_options', 'other', 'long_term_incentive', 'restricted_stock', 'director_fees']
 #features_list = ['poi', 'total_payments', 'total_stock_value', 'fraction_from_poi', 'fraction_to_poi']
-features_list = ['poi', 'salary','bonus']
+features_list = ['poi', 'salary','bonus', 'fraction_from_poi', 'fraction_to_poi']
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
@@ -73,6 +69,7 @@ print(data_dict['ALLEN PHILLIP K'])
 ### Store to my_dataset for easy export below.
 my_dataset = data_dict
 my_dataset.pop('TOTAL')
+
 error_total_stock_count = 0
 for name in my_dataset:
     person_data = my_dataset[name]
@@ -90,23 +87,14 @@ print(error_total_stock_count)
 data = featureFormat(my_dataset, features_list, sort_keys = True)
 labels, features = targetFeatureSplit(data)
 print('data size: %d' % len(labels))
-#print(features)
 
 scaler = preprocessing.MinMaxScaler()
 scaled_features = scaler.fit_transform(features)
-#print(scaled_features)
 
 ##selector = SelectKBest(k=2)
 ##selector.fit(scaled_features, labels)
 ##features_selected = selector.transform(scaled_features)
 #print(features_selected)
-
-##for i in range(0, len(labels)):
-##    pl.scatter(scaled_features[i][0], scaled_features[i][1], c= 'red' if labels[i] == 1 else 'blue')
-##
-##pl.xlabel("exercised_stock_options")
-##pl.ylabel("salary")
-##pl.show()
 
 ### Task 4: Try a varity of classifiers
 ### Please name your classifier clf for easy export below.
@@ -146,13 +134,12 @@ clf = GridSearchCV(decisionTree, parameters, scoring=f1_scorer)
 #test_classifier(clf, my_dataset, features_list)
 
 # Example starting point. Try investigating other evaluation techniques!
-from sklearn.cross_validation import train_test_split
-features_train, features_test, labels_train, labels_test = \
-    train_test_split(features, labels, test_size=0.3, random_state=42)
-
-clf.fit(features_train, labels_train)
-print(features_train)
-prettyPicture(clf, features, labels, features_list)
+##from sklearn.cross_validation import train_test_split
+##features_train, features_test, labels_train, labels_test = \
+##    train_test_split(features, labels, test_size=0.3, random_state=42)
+##
+##clf.fit(features_train, labels_train)
+prettyPicture(scaled_features, labels, features_list)
 #print(clf.best_params_)
 
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
