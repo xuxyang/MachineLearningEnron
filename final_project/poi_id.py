@@ -13,6 +13,7 @@ from sklearn.feature_selection import SelectKBest
 from pretty_picture import prettyPicture
 from sklearn.grid_search import GridSearchCV
 import math
+from sklearn.metrics import f1_score, make_scorer
 
 def computeFraction( poi_messages, all_messages ):
     """ given a number messages to/from POI (numerator) 
@@ -106,23 +107,18 @@ scaled_features = scaler.fit_transform(features)
 ##from sklearn.naive_bayes import GaussianNB
 ##clf = GaussianNB()
 
-##from sklearn.grid_search import GridSearchCV
-##from sklearn.svm import SVC
-####parameters = {'C':[1,2,5,6,7,8,9, 10, 100], 'kernel':('linear', 'poly', 'rbf', 'sigmoid'), 'gamma':[1,2,3,4,5,10]}
-####svr = SVC()
-####clf = GridSearchCV(svr, parameters)
-##clf = SVC(C=5, kernel='rbf', gamma=2)
-
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import f1_score, make_scorer
-#parameters = {'max_depth':[2,5,10], 'min_samples_split':[2,3,4,5]}
-parameters = {'min_samples_split':[2,3,4,5,25,30], 'criterion':['entropy']}
-#decisionTree = DecisionTreeClassifier(criterion='entropy')
-decisionTree = DecisionTreeClassifier()
 f1_scorer = make_scorer(f1_score)
-clf = GridSearchCV(decisionTree, parameters, scoring=f1_scorer)
-#clf = GridSearchCV(decisionTree, parameters)
-##clf = DecisionTreeClassifier(criterion='entropy', min_samples_split=3 )
+
+from sklearn.svm import SVC
+parameters = {'C':[1,2,5,6,7,8,9, 10, 100], 'kernel':('poly', 'rbf', 'sigmoid'), 'gamma':[1,2,3,4,5,10]}
+svr = SVC()
+clf = GridSearchCV(svr, parameters, scoring=f1_scorer)
+#clf = SVC(C=5, kernel='rbf', gamma=2)
+
+##from sklearn.tree import DecisionTreeClassifier
+##parameters = {'min_samples_split':[2,3,4,5,25,30], 'criterion':['entropy']}
+##decisionTree = DecisionTreeClassifier()
+##clf = GridSearchCV(decisionTree, parameters, scoring=f1_scorer)
 
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
 ### using our testing script. Check the tester.py script in the final project
