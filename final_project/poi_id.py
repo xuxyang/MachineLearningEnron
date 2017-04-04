@@ -109,8 +109,9 @@ scaled_features = scaler.fit_transform(features)
 
 f1_scorer = make_scorer(f1_score)
 
+#SVC kernel definition: http://scikit-learn.org/dev/modules/svm.html#kernel-functions
 from sklearn.svm import SVC
-parameters = {'C':[1,2,5,6,7,8,9, 10, 100], 'kernel':('poly', 'rbf', 'sigmoid'), 'gamma':[1,2,3,4,5,10]}
+parameters = {'C':[0.1,0,3,0.5,0.8,1,3,5,7,10], 'kernel':('poly', 'rbf', 'sigmoid'), 'gamma':[0.1,0.2,0,3,0.5,0.8,1,3,5,7,10], 'degree':[2,3,5,10]}
 svr = SVC()
 clf = GridSearchCV(svr, parameters, scoring=f1_scorer)
 #clf = SVC(C=5, kernel='rbf', gamma=2)
@@ -145,6 +146,8 @@ prettyPicture(scaled_features, labels, features_list)
 
 #new_features_list = ['poi','bonus','exercised_stock_options']
 #new_features_list = ['poi','exercised_stock_options','salary']
-dump_classifier_and_data(clf, my_dataset, features_list)
+#dump_classifier_and_data(clf, my_dataset, features_list)
+from my_tester import dump_classifier_and_data
+dump_classifier_and_data(clf, scaled_features, labels)
 
 
