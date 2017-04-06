@@ -4,7 +4,8 @@ import sys
 import pickle
 sys.path.append("../tools/")
 
-from feature_format import featureFormat, targetFeatureSplit
+#from feature_format import featureFormat, targetFeatureSplit
+from my_feature_format import myFeatureFormat, myTargetFeatureSplit
 from tester import dump_classifier_and_data
 from sklearn import preprocessing
 
@@ -85,8 +86,8 @@ print(error_total_stock_count)
     
 
 ### Extract features and labels from dataset for local testing
-data = featureFormat(my_dataset, features_list, sort_keys = True)
-labels, features = targetFeatureSplit(data)
+data = myFeatureFormat(my_dataset, features_list, sort_keys = True)
+names, labels, features = myTargetFeatureSplit(data)
 print('data size: %d' % len(labels))
 
 scaler = preprocessing.MinMaxScaler()
@@ -148,10 +149,11 @@ prettyPicture(scaled_features, labels, features_list)
 ### that the version of poi_id.py that you submit can be run on its own and
 ### generates the necessary .pkl files for validating your results.
 
-#new_features_list = ['poi','bonus','exercised_stock_options']
-#new_features_list = ['poi','exercised_stock_options','salary']
-#dump_classifier_and_data(clf, my_dataset, features_list)
-from my_tester import dump_classifier_and_data
-dump_classifier_and_data(clf, scaled_features, labels)
+from feature_to_dataset import featureToDataset
+scaled_dataset = featureToDataset(scaled_features, labels, names, features_list)
+print(scaled_dataset)
+dump_classifier_and_data(clf, scaled_dataset, features_list)
+##from my_tester import dump_classifier_and_data
+##dump_classifier_and_data(clf, scaled_features, labels)
 
 
