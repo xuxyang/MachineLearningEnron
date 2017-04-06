@@ -13,7 +13,7 @@ from sklearn.feature_selection import SelectKBest
 from pretty_picture import prettyPicture
 from sklearn.grid_search import GridSearchCV
 import math
-from sklearn.metrics import f1_score, make_scorer
+from sklearn.metrics import f1_score, make_scorer, fbeta_score
 
 def computeFraction( poi_messages, all_messages ):
     """ given a number messages to/from POI (numerator) 
@@ -108,12 +108,16 @@ scaled_features = scaler.fit_transform(features)
 ##clf = GaussianNB()
 
 f1_scorer = make_scorer(f1_score)
+f2_scorer = make_scorer(fbeta_score, beta=2)
 
 #SVC kernel definition: http://scikit-learn.org/dev/modules/svm.html#kernel-functions
 from sklearn.svm import SVC
-parameters = {'C':[0.1,0,3,0.5,0.8,1,3,5,7,10], 'kernel':('poly', 'rbf', 'sigmoid'), 'gamma':[0.1,0.2,0,3,0.5,0.8,1,3,5,7,10], 'degree':[2,3,5,10]}
+#parameters = {'C':[0.1,0.3,0.5,0.8,1,3,5,7,10], 'kernel':['poly', 'rbf', 'sigmoid'], 'gamma':[0.1,0.2,0,3,0.5,0.8,1,3,5,7,10], 'degree':[2,3,5,10]}
+#parameters = {'C':[0.03125,0.125,0.5,2,8,32], 'kernel':['rbf'], 'gamma':[0.0078125,0.03125,0.125,0.5,2,8]}
+#parameters = {'C':[5,6,7], 'kernel':['rbf'], 'gamma':[11,12,13]} # the best parameter for rbf kernel so far is C=6 and gamma=12 with 0.51908 precision and 0.238 recall
+parameters = {'C':[0.03125,0.125,0.5,2,8,32], 'kernel':['poly'], 'gamma':[0.0078125,0.03125,0.125,0.5,2,8], 'degree':[2,3,5]}
 svr = SVC()
-clf = GridSearchCV(svr, parameters, scoring=f1_scorer)
+clf = GridSearchCV(svr, parameters, scoring=f2_scorer)
 #clf = SVC(C=5, kernel='rbf', gamma=2)
 
 ##from sklearn.tree import DecisionTreeClassifier
