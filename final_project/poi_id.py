@@ -115,7 +115,7 @@ from sklearn.svm import SVC
 #parameters = {'C':[0.1,0.3,0.5,0.8,1,3,5,7,10], 'kernel':['poly', 'rbf', 'sigmoid'], 'gamma':[0.1,0.2,0,3,0.5,0.8,1,3,5,7,10], 'degree':[2,3,5,10]}
 #parameters = {'C':[0.03125,0.125,0.5,2,8,32], 'kernel':['rbf'], 'gamma':[0.0078125,0.03125,0.125,0.5,2,8]}
 #parameters = {'C':[5,6,7], 'kernel':['rbf'], 'gamma':[11,12,13]} # the best parameter for rbf kernel so far is C=6 and gamma=12 with 0.51908 precision and 0.238 recall
-parameters = {'C':[0.03125,0.125,0.5,2,8,32], 'kernel':['poly'], 'gamma':[0.0078125,0.03125,0.125,0.5,2,8], 'degree':[2,3,5]}
+parameters = {'C':[0.03125,0.125,0.5,2,8,32], 'kernel':['poly'], 'gamma':[0.0078125,0.03125,0.125,0.5,2,8], 'degree':[2,3,5]} # best parameter for poly kernel so far is C=8 and gamma=8 and degree=5 with 0.48428 precision and 0.323 recall
 svr = SVC()
 clf = GridSearchCV(svr, parameters, scoring=f2_scorer)
 #clf = SVC(C=5, kernel='rbf', gamma=2)
