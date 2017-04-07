@@ -49,7 +49,8 @@ def computeFraction( poi_messages, all_messages ):
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
 #features_list = ['poi', 'total_payments', 'total_stock_value', 'fraction_from_poi', 'fraction_to_poi']
-features_list = ['poi', 'salary','bonus', 'fraction_from_poi', 'fraction_to_poi']
+#features_list = ['poi', 'salary','bonus', 'fraction_from_poi', 'fraction_to_poi']
+features_list = ['poi','salary','exercised_stock_options','bonus','restricted_stock','expenses','loan_advances','other','director_fees','long_term_incentive','restricted_stock_deferred','deferred_income']
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
@@ -93,10 +94,10 @@ print('data size: %d' % len(labels))
 scaler = preprocessing.MinMaxScaler()
 scaled_features = scaler.fit_transform(features)
 
-##selector = SelectKBest(k=2)
-##selector.fit(scaled_features, labels)
-##features_selected = selector.transform(scaled_features)
-#print(features_selected)
+selector = SelectKBest(k=3)
+selector.fit(scaled_features, labels)
+#features_selected = selector.transform(scaled_features)
+print(selector.get_support())
 
 ### Task 4: Try a varity of classifiers
 ### Please name your classifier clf for easy export below.
@@ -151,7 +152,6 @@ prettyPicture(scaled_features, labels, features_list)
 
 from feature_to_dataset import featureToDataset
 scaled_dataset = featureToDataset(scaled_features, labels, names, features_list)
-print(scaled_dataset)
 dump_classifier_and_data(clf, scaled_dataset, features_list)
 ##from my_tester import dump_classifier_and_data
 ##dump_classifier_and_data(clf, scaled_features, labels)
