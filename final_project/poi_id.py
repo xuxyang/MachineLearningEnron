@@ -11,7 +11,7 @@ from sklearn import preprocessing
 
 import matplotlib.pyplot as pl
 from sklearn.feature_selection import SelectKBest
-from pretty_picture import prettyPicture
+from pretty_picture import prettyPicture, featureRelationPicture
 from sklearn.grid_search import GridSearchCV
 import math
 from sklearn.metrics import f1_score, make_scorer, fbeta_score
@@ -49,8 +49,8 @@ def computeFraction( poi_messages, all_messages ):
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
 #features_list = ['poi', 'total_payments', 'total_stock_value', 'fraction_from_poi', 'fraction_to_poi']
-#features_list = ['poi', 'salary','bonus', 'fraction_from_poi', 'fraction_to_poi']
-features_list = ['poi','salary','exercised_stock_options','bonus','restricted_stock','expenses','loan_advances','other','director_fees','long_term_incentive','restricted_stock_deferred','deferred_income']
+features_list = ['poi', 'salary','exercised_stock_options', 'fraction_from_poi', 'fraction_to_poi']
+#features_list = ['poi','fraction_from_poi', 'fraction_to_poi', 'salary','exercised_stock_options','bonus','restricted_stock','expenses','loan_advances','other','director_fees','long_term_incentive','restricted_stock_deferred','deferred_income']
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
@@ -94,7 +94,9 @@ print('data size: %d' % len(labels))
 scaler = preprocessing.MinMaxScaler()
 scaled_features = scaler.fit_transform(features)
 
-selector = SelectKBest(k=3)
+featureRelationPicture(features, [0,1], features_list)
+
+selector = SelectKBest(k=4)
 selector.fit(scaled_features, labels)
 #features_selected = selector.transform(scaled_features)
 print(selector.get_support())
@@ -116,8 +118,10 @@ f2_scorer = make_scorer(fbeta_score, beta=2)
 from sklearn.svm import SVC
 #parameters = {'C':[0.1,0.3,0.5,0.8,1,3,5,7,10], 'kernel':['poly', 'rbf', 'sigmoid'], 'gamma':[0.1,0.2,0,3,0.5,0.8,1,3,5,7,10], 'degree':[2,3,5,10]}
 #parameters = {'C':[0.03125,0.125,0.5,2,8,32], 'kernel':['rbf'], 'gamma':[0.0078125,0.03125,0.125,0.5,2,8]}
-#parameters = {'C':[5,6,7], 'kernel':['rbf'], 'gamma':[11,12,13]} # the best parameter for rbf kernel so far is C=6 and gamma=12 with 0.51908 precision and 0.238 recall
-parameters = {'C':[0.03125,0.125,0.5,2,8,32], 'kernel':['poly'], 'gamma':[0.0078125,0.03125,0.125,0.5,2,8], 'degree':[2,3,5]} # best parameter for poly kernel so far is C=8 and gamma=8 and degree=5 with 0.48428 precision and 0.323 recall
+#parameters = {'C':[5,6,7], 'kernel':['rbf'], 'gamma':[11,12,13]} # the best parameter for rbf kernel with salary, bonus, fraction_from_poi and fraction_to_poi features so far is C=6 and gamma=12 with 0.51908 precision and 0.238 recall
+#parameters = {'C':[0.03125,0.125,0.5,2,8,32], 'kernel':['poly'], 'gamma':[0.0078125,0.03125,0.125,0.5,2,8], 'degree':[2,3,5]} # best parameter for poly kernel with salary, bonus, fraction_from_poi and fraction_to_poi features so far is C=8 and gamma=8 and degree=5 with 0.48428 precision and 0.323 recall
+#parameters = {'C':[32,36,40,44], 'kernel':['poly'], 'gamma':[8,9,10], 'degree':[5]} #salary, exercised_stock_options, fraction_from_poi and fraction_to_poi features precision 0.43219 and recall 0.341 
+parameters = {'C':[36], 'kernel':['poly'], 'gamma':[10], 'degree':[5]} #salary, exercised_stock_options, fraction_from_poi and fraction_to_poi features precision 0.43255 and recall 0.3495  
 svr = SVC()
 clf = GridSearchCV(svr, parameters, scoring=f2_scorer)
 #clf = SVC(C=5, kernel='rbf', gamma=2)

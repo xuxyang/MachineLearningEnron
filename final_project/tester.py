@@ -17,7 +17,6 @@ sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
 #from class_vis import prettyPicture
 from sklearn.metrics import accuracy_score
-from sklearn.metrics import f1_score
 
 PERF_FORMAT_STRING = "\
 \tAccuracy: {:>0.{display_precision}f}\tPrecision: {:>0.{display_precision}f}\t\
@@ -47,9 +46,12 @@ def test_classifier(clf, dataset, feature_list, folds = 1000):
             labels_test.append( labels[jj] )
         ### fit the classifier using training set, and test on test set
         clf.fit(features_train, labels_train)
+        score_value = clf.score(features_train, labels_train)
         if loop_index == 0:
-            print(clf.score(features_train, labels_train))
-            print(f1_score(labels_train, clf.predict(features_train)))
+            print(score_value)
+            print(clf.best_params_)
+        elif score_value > 0.75:
+            print(score_value)
             print(clf.best_params_)
         predictions = clf.predict(features_test)
         for prediction, truth in zip(predictions, labels_test):
