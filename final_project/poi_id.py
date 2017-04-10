@@ -7,7 +7,7 @@ sys.path.append("../tools/")
 #from feature_format import featureFormat, targetFeatureSplit
 from my_feature_format import myFeatureFormat, myTargetFeatureSplit
 from tester import dump_classifier_and_data
-from sklearn import preprocessing
+from sklearn.preprocessing import MinMaxScaler
 
 import matplotlib.pyplot as pl
 from sklearn.feature_selection import SelectKBest
@@ -15,6 +15,8 @@ from pretty_picture import prettyPicture, featureRelationPicture
 from sklearn.grid_search import GridSearchCV
 import math
 from sklearn.metrics import f1_score, make_scorer, fbeta_score
+from sklearn.pipeline import make_pipeline
+from sklearn.svm import SVC
 
 def computeFraction( poi_messages, all_messages ):
     """ given a number messages to/from POI (numerator) 
@@ -49,8 +51,8 @@ def computeFraction( poi_messages, all_messages ):
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
 #features_list = ['poi', 'total_payments', 'total_stock_value', 'fraction_from_poi', 'fraction_to_poi']
-features_list = ['poi', 'salary','exercised_stock_options', 'fraction_from_poi', 'fraction_to_poi']
-#features_list = ['poi','fraction_from_poi', 'fraction_to_poi', 'salary','exercised_stock_options','bonus','restricted_stock','expenses','loan_advances','other','director_fees','long_term_incentive','restricted_stock_deferred','deferred_income']
+#features_list = ['poi', 'salary','exercised_stock_options', 'fraction_from_poi', 'fraction_to_poi']
+features_list = ['poi','fraction_from_poi', 'fraction_to_poi', 'salary','exercised_stock_options','bonus','restricted_stock','expenses','loan_advances','other','director_fees','long_term_incentive','restricted_stock_deferred','deferred_income']
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
@@ -84,22 +86,22 @@ for name in my_dataset:
 print(my_dataset['BELFER ROBERT'])
 print(my_dataset['CARTER REBECCA C'])
 print(error_total_stock_count)
-    
+
+
 
 ### Extract features and labels from dataset for local testing
 data = myFeatureFormat(my_dataset, features_list, sort_keys = True)
 names, labels, features = myTargetFeatureSplit(data)
 print('data size: %d' % len(labels))
 
-scaler = preprocessing.MinMaxScaler()
-scaled_features = scaler.fit_transform(features)
-
-featureRelationPicture(features, [0,1], features_list)
-
-selector = SelectKBest(k=4)
-selector.fit(scaled_features, labels)
-#features_selected = selector.transform(scaled_features)
-print(selector.get_support())
+##scaler = preprocessing.MinMaxScaler()
+##scaled_features = scaler.fit_transform(features)
+##
+##featureRelationPicture(features, [0,1], features_list)
+##
+##selector = SelectKBest(k=4)
+##selector.fit(scaled_features, labels)
+##print(selector.get_support())
 
 ### Task 4: Try a varity of classifiers
 ### Please name your classifier clf for easy export below.
@@ -114,17 +116,19 @@ print(selector.get_support())
 f1_scorer = make_scorer(f1_score)
 f2_scorer = make_scorer(fbeta_score, beta=2)
 
+pipe = make_pipeline(MinMaxScaler(), SelectKBest(k=4), SVC())
+parameters = dict(svc__C=[36], svc__kernel=['poly'], svc__gamma=[10], svc__degree=[5])
+clf = GridSearchCV(pipe, parameters, scoring=f2_scorer)
+
 #SVC kernel definition: http://scikit-learn.org/dev/modules/svm.html#kernel-functions
-from sklearn.svm import SVC
 #parameters = {'C':[0.1,0.3,0.5,0.8,1,3,5,7,10], 'kernel':['poly', 'rbf', 'sigmoid'], 'gamma':[0.1,0.2,0,3,0.5,0.8,1,3,5,7,10], 'degree':[2,3,5,10]}
 #parameters = {'C':[0.03125,0.125,0.5,2,8,32], 'kernel':['rbf'], 'gamma':[0.0078125,0.03125,0.125,0.5,2,8]}
 #parameters = {'C':[5,6,7], 'kernel':['rbf'], 'gamma':[11,12,13]} # the best parameter for rbf kernel with salary, bonus, fraction_from_poi and fraction_to_poi features so far is C=6 and gamma=12 with 0.51908 precision and 0.238 recall
 #parameters = {'C':[0.03125,0.125,0.5,2,8,32], 'kernel':['poly'], 'gamma':[0.0078125,0.03125,0.125,0.5,2,8], 'degree':[2,3,5]} # best parameter for poly kernel with salary, bonus, fraction_from_poi and fraction_to_poi features so far is C=8 and gamma=8 and degree=5 with 0.48428 precision and 0.323 recall
 #parameters = {'C':[32,36,40,44], 'kernel':['poly'], 'gamma':[8,9,10], 'degree':[5]} #salary, exercised_stock_options, fraction_from_poi and fraction_to_poi features precision 0.43219 and recall 0.341 
-parameters = {'C':[36], 'kernel':['poly'], 'gamma':[10], 'degree':[5]} #salary, exercised_stock_options, fraction_from_poi and fraction_to_poi features precision 0.43255 and recall 0.3495  
-svr = SVC()
-clf = GridSearchCV(svr, parameters, scoring=f2_scorer)
-#clf = SVC(C=5, kernel='rbf', gamma=2)
+##parameters = {'C':[36], 'kernel':['poly'], 'gamma':[10], 'degree':[5]} #salary, exercised_stock_options, fraction_from_poi and fraction_to_poi features precision 0.43255 and recall 0.3495  
+##svr = SVC()
+##clf = GridSearchCV(svr, parameters, scoring=f2_scorer)
 
 ##from sklearn.tree import DecisionTreeClassifier
 ##parameters = {'min_samples_split':[2,3,4,5,25,30], 'criterion':['entropy']}
@@ -146,7 +150,7 @@ clf = GridSearchCV(svr, parameters, scoring=f2_scorer)
 ##    train_test_split(features, labels, test_size=0.3, random_state=42)
 ##
 ##clf.fit(features_train, labels_train)
-prettyPicture(scaled_features, labels, features_list)
+#prettyPicture(scaled_features, labels, features_list)
 #print(clf.best_params_)
 
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
@@ -154,9 +158,9 @@ prettyPicture(scaled_features, labels, features_list)
 ### that the version of poi_id.py that you submit can be run on its own and
 ### generates the necessary .pkl files for validating your results.
 
-from feature_to_dataset import featureToDataset
-scaled_dataset = featureToDataset(scaled_features, labels, names, features_list)
-dump_classifier_and_data(clf, scaled_dataset, features_list)
+##from feature_to_dataset import featureToDataset
+##scaled_dataset = featureToDataset(scaled_features, labels, names, features_list)
+dump_classifier_and_data(clf, my_dataset, features_list)
 ##from my_tester import dump_classifier_and_data
 ##dump_classifier_and_data(clf, scaled_features, labels)
 
