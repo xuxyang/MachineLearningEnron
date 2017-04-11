@@ -46,13 +46,11 @@ def test_classifier(clf, dataset, feature_list, folds = 1000):
             labels_test.append( labels[jj] )
         ### fit the classifier using training set, and test on test set
         clf.fit(features_train, labels_train)
-        score_value = clf.score(features_train, labels_train)
-        if loop_index == 0:
-            print(score_value)
-            print(clf.best_params_)
-        elif score_value > 0.75:
-            print(score_value)
-            print(clf.best_params_)
+        score_value = clf.best_score_
+        #if score_value > 0.75:
+        print(score_value)
+        print(clf.best_params_)
+        print(clf.best_estimator_.named_steps['selectkbest'].get_support())
         predictions = clf.predict(features_test)
         for prediction, truth in zip(predictions, labels_test):
             if prediction == 0 and truth == 0:

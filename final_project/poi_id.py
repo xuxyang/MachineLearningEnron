@@ -117,7 +117,9 @@ f1_scorer = make_scorer(f1_score)
 f2_scorer = make_scorer(fbeta_score, beta=2)
 
 pipe = make_pipeline(MinMaxScaler(), SelectKBest(k=4), SVC())
-parameters = dict(svc__C=[36], svc__kernel=['poly'], svc__gamma=[10], svc__degree=[5])
+parameters = dict(svc__C=[20,24,28,32,36], svc__kernel=['poly'], svc__gamma=[8,9,10], svc__degree=[5])
+##parameters = [dict(svc__C=[2,8,32,36], svc__kernel=['poly'], svc__gamma=[2,8,16], svc__degree=[2,3,5]),
+##              dict(svc__C=[2,8,32], svc__kernel=['rbf'], svc__gamma=[2,8,16])]
 clf = GridSearchCV(pipe, parameters, scoring=f2_scorer)
 
 #SVC kernel definition: http://scikit-learn.org/dev/modules/svm.html#kernel-functions
