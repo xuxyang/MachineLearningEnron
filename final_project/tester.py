@@ -52,6 +52,7 @@ def test_classifier(clf, dataset, feature_list, folds = 1000):
         print(clf.best_params_)
         print(clf.best_estimator_.named_steps['selectkbest'].get_support())
         predictions = clf.predict(features_test)
+        print(accuracy_score(labels_test, predictions))
         for prediction, truth in zip(predictions, labels_test):
             if prediction == 0 and truth == 0:
                 true_negatives += 1
