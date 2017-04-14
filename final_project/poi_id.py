@@ -17,6 +17,7 @@ import math
 from sklearn.metrics import f1_score, make_scorer, fbeta_score
 from sklearn.pipeline import make_pipeline
 from sklearn.svm import SVC
+from sklearn.cross_validation import StratifiedKFold
 
 def computeFraction( poi_messages, all_messages ):
     """ given a number messages to/from POI (numerator) 
@@ -52,7 +53,7 @@ def computeFraction( poi_messages, all_messages ):
 ### The first feature must be "poi".
 #features_list = ['poi', 'total_payments', 'total_stock_value', 'fraction_from_poi', 'fraction_to_poi']
 #features_list = ['poi', 'salary','exercised_stock_options', 'fraction_from_poi', 'fraction_to_poi']
-features_list = ['poi','fraction_from_poi', 'fraction_to_poi', 'salary','exercised_stock_options','bonus','restricted_stock','expenses','loan_advances','other','director_fees','long_term_incentive','restricted_stock_deferred','deferred_income']
+org_features_list = ['poi','fraction_from_poi', 'fraction_to_poi', 'salary','exercised_stock_options','bonus','restricted_stock','expenses','loan_advances','other','director_fees','long_term_incentive','restricted_stock_deferred','deferred_income','deferral_payments']
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
@@ -60,7 +61,7 @@ with open("final_project_dataset.pkl", "r") as data_file:
 
 ##print('length of dataset: %d' % len(data_dict))
 #print(data_dict['PICKERING MARK R'])
-print(data_dict['ALLEN PHILLIP K'])
+#print(data_dict['ALLEN PHILLIP K'])
 ##poi_count = 0
 ##for key,value in data_dict.iteritems():
 ##    if value['poi'] == True:
@@ -75,22 +76,27 @@ print(data_dict['ALLEN PHILLIP K'])
 my_dataset = data_dict
 my_dataset.pop('TOTAL')
 
-error_total_stock_count = 0
 for name in my_dataset:
     person_data = my_dataset[name]
-    if person_data['total_stock_value'] < 0:
-        error_total_stock_count += 1
+    if name == 'BELFER ROBERT':
+        person_data['deferred_income'] = person_data['deferral_payments']
+        person_data['deferral_payments'] = 0.0
         person_data['total_stock_value'] = 0.0
+    if person_data['deferred_income'] < 0:
+        person_data['deferred_income'] = abs(person_data['deferred_income'])
+    if person_data['deferral_payments'] < 0:
+        person_data['deferral_payments'] = abs(person_data['deferral_payments'])
+    if person_data['restricted_stock_deferred'] < 0:
+        person_data['restricted_stock_deferred'] = abs(person_data['restricted_stock_deferred'])
     person_data['fraction_from_poi'] = computeFraction(person_data['from_poi_to_this_person'], person_data['to_messages'])
     person_data['fraction_to_poi'] = computeFraction(person_data['from_this_person_to_poi'], person_data['from_messages'])
 print(my_dataset['BELFER ROBERT'])
 print(my_dataset['CARTER REBECCA C'])
-print(error_total_stock_count)
 
 
 
 ### Extract features and labels from dataset for local testing
-data = myFeatureFormat(my_dataset, features_list, sort_keys = True)
+data = myFeatureFormat(my_dataset, org_features_list, sort_keys = True)
 names, labels, features = myTargetFeatureSplit(data)
 print('data size: %d' % len(labels))
 
@@ -117,20 +123,24 @@ f1_scorer = make_scorer(f1_score)
 f2_scorer = make_scorer(fbeta_score, beta=2)
 
 pipe = make_pipeline(MinMaxScaler(), SelectKBest(k=4), SVC())
-parameters = dict(svc__C=[32,36,40,44], svc__kernel=['poly'], svc__gamma=[8,9,10], svc__degree=[2,3])
+parameters = dict(svc__C=[0.03125,0.125,0.5,2,8,32,40], svc__kernel=['poly'], svc__gamma=[0.0078125,0.03125,0.125,0.5,2,8,10,12], svc__degree=[2,3,4,5])
 ##parameters = [dict(svc__C=[2,8,32,36], svc__kernel=['poly'], svc__gamma=[2,8,16], svc__degree=[2,3,5]),
 ##              dict(svc__C=[2,8,32], svc__kernel=['rbf'], svc__gamma=[2,8,16])]
-clf = GridSearchCV(pipe, parameters, n_jobs=2, scoring=f2_scorer)
+grid_cv = StratifiedKFold(labels, n_folds=4, shuffle=True)
+grid = GridSearchCV(pipe, parameters, n_jobs=1, scoring=f2_scorer, cv=grid_cv)
+grid.fit(features, labels)
+print(grid.best_score_)
+print(grid.best_params_)
+print(grid.best_estimator_.named_steps['selectkbest'].get_support())
+
+features_list = ['poi','fraction_from_poi', 'fraction_to_poi', 'salary','exercised_stock_options']
+clf = make_pipeline(MinMaxScaler(), SVC(C=32,kernel='poly',gamma=12,degree=5)) #precision 0.40644 and recall 0.328
 
 #SVC kernel definition: http://scikit-learn.org/dev/modules/svm.html#kernel-functions
-#parameters = {'C':[0.1,0.3,0.5,0.8,1,3,5,7,10], 'kernel':['poly', 'rbf', 'sigmoid'], 'gamma':[0.1,0.2,0,3,0.5,0.8,1,3,5,7,10], 'degree':[2,3,5,10]}
 #parameters = {'C':[0.03125,0.125,0.5,2,8,32], 'kernel':['rbf'], 'gamma':[0.0078125,0.03125,0.125,0.5,2,8]}
 #parameters = {'C':[5,6,7], 'kernel':['rbf'], 'gamma':[11,12,13]} # the best parameter for rbf kernel with salary, bonus, fraction_from_poi and fraction_to_poi features so far is C=6 and gamma=12 with 0.51908 precision and 0.238 recall
 #parameters = {'C':[0.03125,0.125,0.5,2,8,32], 'kernel':['poly'], 'gamma':[0.0078125,0.03125,0.125,0.5,2,8], 'degree':[2,3,5]} # best parameter for poly kernel with salary, bonus, fraction_from_poi and fraction_to_poi features so far is C=8 and gamma=8 and degree=5 with 0.48428 precision and 0.323 recall
-#parameters = {'C':[32,36,40,44], 'kernel':['poly'], 'gamma':[8,9,10], 'degree':[5]} #salary, exercised_stock_options, fraction_from_poi and fraction_to_poi features precision 0.43219 and recall 0.341 
 ##parameters = {'C':[36], 'kernel':['poly'], 'gamma':[10], 'degree':[5]} #salary, exercised_stock_options, fraction_from_poi and fraction_to_poi features precision 0.43255 and recall 0.3495  
-##svr = SVC()
-##clf = GridSearchCV(svr, parameters, scoring=f2_scorer)
 
 ##from sklearn.tree import DecisionTreeClassifier
 ##parameters = {'min_samples_split':[2,3,4,5,25,30], 'criterion':['entropy']}

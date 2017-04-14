@@ -33,7 +33,6 @@ def test_classifier(clf, dataset, feature_list, folds = 1000):
     true_positives = 0
     false_positives = 0
     loop_index = 0
-    results = {}
     for train_idx, test_idx in cv:
         features_train = []
         features_test  = []
@@ -47,13 +46,6 @@ def test_classifier(clf, dataset, feature_list, folds = 1000):
             labels_test.append( labels[jj] )
         ### fit the classifier using training set, and test on test set
         clf.fit(features_train, labels_train)
-        score_value = clf.best_score_
-        params_value = clf.best_params_
-        #if score_value > 0.75:
-        print(score_value)
-        print(params_value)
-        print(clf.best_estimator_.named_steps['selectkbest'].get_support())
-        results[loop_index] = [score_value, params_value]
         predictions = clf.predict(features_test)
         print(accuracy_score(labels_test, predictions))
         for prediction, truth in zip(predictions, labels_test):
@@ -73,7 +65,6 @@ def test_classifier(clf, dataset, feature_list, folds = 1000):
 
         loop_index += 1
     try:
-        print(sorted(results.items(), key=lambda x: x[1][0], reverse=True)[:10])
         print(true_positives)
         total_predictions = true_negatives + false_negatives + false_positives + true_positives
         accuracy = 1.0*(true_positives + true_negatives)/total_predictions
