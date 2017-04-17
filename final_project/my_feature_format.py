@@ -32,8 +32,9 @@
 
 
 import numpy as np
+import random
 
-def myFeatureFormat( dictionary, features, remove_NaN=True, remove_all_zeroes=True, remove_any_zeroes=False, sort_keys = False):
+def myFeatureFormat( dictionary, features, remove_NaN=True, remove_all_zeroes=True, remove_any_zeroes=False, sort_keys = False, random_keys = False):
     """ convert dictionary to numpy array of features
         remove_NaN = True will convert "NaN" string to 0.0
         remove_all_zeroes = True will omit any data points for which
@@ -59,6 +60,9 @@ def myFeatureFormat( dictionary, features, remove_NaN=True, remove_all_zeroes=Tr
         keys = pickle.load(open(sort_keys, "rb"))
     elif sort_keys:
         keys = sorted(dictionary.keys())
+    elif random_keys:
+        keys = dictionary.keys()
+        random.shuffle(keys)
     else:
         keys = dictionary.keys()
 
