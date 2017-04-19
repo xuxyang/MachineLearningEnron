@@ -12,7 +12,7 @@ from sklearn.preprocessing import StandardScaler
 
 import matplotlib.pyplot as pl
 from sklearn.feature_selection import SelectKBest
-from pretty_picture import prettyPicture, featureRelationPicture
+from pretty_picture import prettyPicture, featureRelationPicture, classifierBoundary
 from sklearn.grid_search import GridSearchCV
 import math
 from sklearn.metrics import f1_score, make_scorer, fbeta_score
@@ -58,13 +58,14 @@ def computeFraction( poi_messages, all_messages ):
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
 org_features_list = ['poi','fraction_shared', 'fraction_from_poi', 'fraction_to_poi', 'salary','exercised_stock_options','bonus','restricted_stock','expenses','loan_advances','other','director_fees','long_term_incentive','restricted_stock_deferred','deferred_income','deferral_payments']
+#org_features_list = ['poi', 'salary','exercised_stock_options','bonus','restricted_stock','expenses','loan_advances','other','director_fees','long_term_incentive','restricted_stock_deferred','deferred_income','deferral_payments']
 print(len(org_features_list))
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
     data_dict = pickle.load(data_file)
 
-##print('length of dataset: %d' % len(data_dict))
+print('length of dataset: %d' % len(data_dict))
 #print(data_dict['PICKERING MARK R'])
 #print(data_dict['ALLEN PHILLIP K'])
 poi_count = 0
@@ -123,10 +124,11 @@ scaled_features = scaler.fit_transform(features)
 kbest = SelectKBest(k=4)
 kbest.fit(scaled_features,labels)
 print(kbest.get_support())
+print(kbest.scores_)
 ##featureRelationPicture(features, [0,1], features_list)
 
 std_features = StandardScaler().fit_transform(features)
-pca = PCA(n_components=14)
+pca = PCA(n_components=12)
 pca.fit(std_features)
 print(pca.components_)
 print(pca.explained_variance_ratio_) # 5 components > 0.7
@@ -144,20 +146,20 @@ print(pca.explained_variance_ratio_) # 5 components > 0.7
 f1_scorer = make_scorer(f1_score)
 f2_scorer = make_scorer(fbeta_score, beta=2)
 
-pipe = make_pipeline(MinMaxScaler(), SelectKBest(k=4), SVC())
-#pipe = make_pipeline(MinMaxScaler(), SelectKBest(k=4), DecisionTreeClassifier(random_state=42))
+#pipe = make_pipeline(MinMaxScaler(), SelectKBest(k=4), SVC())
+pipe = make_pipeline(MinMaxScaler(), SelectKBest(k=4), DecisionTreeClassifier(random_state=42))
 #pipe = make_pipeline(StandardScaler(), PCA(n_components=5), SVC())
 #pipe = make_pipeline(StandardScaler(), PCA(n_components=5), DecisionTreeClassifier(random_state=42))
 
 #parameters = [dict(svc__C=[0.03125,0.125,0.5,2,6,8,32,36], svc__kernel=['poly'], svc__gamma=[0.0078125,0.03125,0.125,0.5,2,8,10,12,16], svc__degree=[2,3,4,5]),
 #              dict(svc__C=[0.03125,0.125,0.5,2,6,8,32,36], svc__kernel=['rbf'], svc__gamma=[0.0078125,0.03125,0.125,0.5,2,8,10,12,16])]
 
-####final parameters for decision tree 
-#parameters = dict(decisiontreeclassifier__min_samples_leaf=[2,3,4,5,10,20,30], decisiontreeclassifier__criterion=['entropy','gini'])
+##final parameters for decision tree 
+parameters = dict(decisiontreeclassifier__min_samples_leaf=[2,3,4,5,10,20,30], decisiontreeclassifier__criterion=['entropy','gini'])
 
-##final parameters for svc 
-parameters = [dict(svc__C=[0.5,2,6,8,32,36,40], svc__kernel=['poly'], svc__gamma=[0.5,2,8,10,12,16,20], svc__degree=[2,3,4,5]),
-              dict(svc__C=[0.5,2,6,8,32,36,40], svc__kernel=['rbf'], svc__gamma=[0.5,2,8,10,12,16,20])]
+####final parameters for svc 
+##parameters = [dict(svc__C=[0.5,2,6,8,32,36,40], svc__kernel=['poly'], svc__gamma=[0.5,2,8,10,12,16,20], svc__degree=[2,3,4,5]),
+##              dict(svc__C=[0.5,2,6,8,32,36,40], svc__kernel=['rbf'], svc__gamma=[0.5,2,8,10,12,16,20])]
 
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
 ### using our testing script. Check the tester.py script in the final project
@@ -189,6 +191,8 @@ best_params = grid.best_params_
 print(grid.best_score_)
 print(best_params)
 print(support_features)
+print(grid.best_estimator_.named_steps['selectkbest'].scores_)
+print(grid.best_estimator_.named_steps['decisiontreeclassifier'].feature_importances_)
 ##print(grid.best_estimator_.named_steps['pca'].explained_variance_ratio_)
 
 ##predict = grid.predict(features_test)
@@ -198,19 +202,28 @@ print(support_features)
 
 
 features_list = support_features 
-if best_params['svc__kernel'] == 'rbf':
-    svc = SVC(C=best_params['svc__C'],kernel=best_params['svc__kernel'],gamma=best_params['svc__gamma'])
-elif best_params['svc__kernel'] == 'poly':
-    svc = SVC(C=best_params['svc__C'],kernel=best_params['svc__kernel'],gamma=best_params['svc__gamma'],degree=best_params['svc__degree'])
-clf = make_pipeline(MinMaxScaler(), svc) #100 folds and 0.3 test size shuffle split; fraction_to_poi, salary, bonus and exercised_stock_options features; ploy kernel with c=40, gamma=20, degree=4; accuracy 0.83369, precision 0.44788 and recall 0.348
+##if best_params['svc__kernel'] == 'rbf':
+##    svc = SVC(C=best_params['svc__C'],kernel=best_params['svc__kernel'],gamma=best_params['svc__gamma'])
+##elif best_params['svc__kernel'] == 'poly':
+##    svc = SVC(C=best_params['svc__C'],kernel=best_params['svc__kernel'],gamma=best_params['svc__gamma'],degree=best_params['svc__degree'])
+##clf = make_pipeline(MinMaxScaler(), svc) #100 folds and 0.3 test size shuffle split; fraction_to_poi, salary, bonus and exercised_stock_options features; ploy kernel with c=40, gamma=20, degree=4; accuracy 0.83369, precision 0.44788 and recall 0.348
 ##features_list = ['poi','fraction_from_poi', 'fraction_to_poi', 'salary','bonus'] #use 8 folds and random_state 42 and svc for GridSearchCV with precision 0.45987 and recall 0.4355 and accuracy 0.80436
 ##clf = make_pipeline(MinMaxScaler(), SVC(C=32,kernel='poly',gamma=16,degree=3))
-#clf = DecisionTreeClassifier(min_samples_leaf=best_params['decisiontreeclassifier__min_samples_leaf'], criterion=best_params['decisiontreeclassifier__criterion']) #100 folds and 0.3 test size shuffle split;fraction_to_poi, salary, bonus and exercised_stock_options features; min_samples_leaf=10, entropy criteria;0.84277 accuracy, 0.48497 precision and 0.355 recall
+clf = DecisionTreeClassifier(min_samples_leaf=best_params['decisiontreeclassifier__min_samples_leaf'], criterion=best_params['decisiontreeclassifier__criterion']) #100 folds and 0.3 test size shuffle split;fraction_to_poi, salary, bonus and exercised_stock_options features; min_samples_leaf=10, entropy criteria;0.84277 accuracy, 0.48497 precision and 0.355 recall
 
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
 ### check your results. You do not need to change anything below, but make sure
 ### that the version of poi_id.py that you submit can be run on its own and
 ### generates the necessary .pkl files for validating your results.
+
+##plot classifier boundary
+features_list = ['poi', 'fraction_to_poi', 'bonus'] # reduce features from 4 to the top 2 important features (fraction_to_poi > 0.5 and bonus > 0.3): accuracy 0.8177, precision 0.55713 and recall 0.4315
+data = myFeatureFormat(test_dataset, features_list, random_keys = False)
+names, labels, features = myTargetFeatureSplit(data)
+scaled_features = MinMaxScaler().fit_transform(features)
+clf.fit(scaled_features, labels)
+classifierBoundary(clf, features_list)
+
 
 dump_classifier_and_data(clf, test_dataset, features_list)
 
